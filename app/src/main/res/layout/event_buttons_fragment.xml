@@ -4,10 +4,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".EventButtonsFragment">
+    <TextView
+
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="this is event b fragment" />
+
 
     <TextView
+        android:id="@+id/hello"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:text="Hello" />
+
 
 </FrameLayout>
