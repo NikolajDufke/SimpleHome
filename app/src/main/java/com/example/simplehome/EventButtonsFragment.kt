@@ -24,9 +24,6 @@ class EventButtonsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.event_buttons_fragment, container, false)
-
-
-
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -34,10 +31,11 @@ class EventButtonsFragment : Fragment() {
         viewModel = ViewModelProvider(this).get(EventButtonsViewModel::class.java)
 
         //viewModel.getTest().observe( viewLifecycleOwner, Observer<List<String>>{})
-        viewModel.getUserTest().observe(viewLifecycleOwner, Observer<UserTest>{
-            val t = view?.findViewById<TextView>(R.id.hello)
-            t?.text = "test2"
-        })
+        viewModel.getUserTest().observe(viewLifecycleOwner,  Observer<UserTest>(){
+            println("DEBUB:"+ it)
 
+            /* val t = view?.findViewById<TextView>(R.id.hello)
+            t?.text = it.name*/
+        })
     }
 }
