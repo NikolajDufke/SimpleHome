@@ -1,5 +1,4 @@
 package com.example.simplehome.models
 
-class UserTest(name:String = ""){
-
+class UserTest(var name: String) {
 }
