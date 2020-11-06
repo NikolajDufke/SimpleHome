@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.simplehome.models.*
 import com.google.gson.*
 import com.google.gson.JsonParseException
+import java.lang.reflect.Array
 import java.lang.reflect.Type
 
 
@@ -17,10 +18,9 @@ class JsonAdaptor(){
     }
 }
 
-
-
-
 internal class ResponseDeserializer : JsonDeserializer<baseResponse?> {
+    private val TAG: String = "ResponseDeserializer"
+
     @Throws(JsonParseException::class)
     override fun deserialize(
         json: JsonElement,
@@ -28,7 +28,7 @@ internal class ResponseDeserializer : JsonDeserializer<baseResponse?> {
         context: JsonDeserializationContext
     ): baseResponse? {
 
-        var jsonResult : baseResponse =
+        var jsonResult: baseResponse =
             baseResponse()
 
         val jsonObject = json.asJsonObject
@@ -37,61 +37,108 @@ internal class ResponseDeserializer : JsonDeserializer<baseResponse?> {
         jsonResult.success = jsonObject["success"].asBoolean
         jsonResult.type = jsonObject["type"].asString
 
-        val type = jsonObject["result"]?.asJsonArray
+        var resultArray: JsonArray? = JsonArray()
+        try {
+            resultArray = jsonObject["result"]?.asJsonArray
+            resultArray?.forEach {
+                if (it != null) {
+                    val itJsonObject = it.asJsonObject
+                    jsonResult.result!!.add(getResult(itJsonObject))
+                }
+            }
+        }
+        catch(e: Exception){
+            Log.d(TAG, "no result in response")
+            resultArray = JsonArray()
+        }
+            return jsonResult
+        }
+    }
 
 
-        jsonResult.result = mutableListOf()
 
+    internal class EventDeserializer : JsonDeserializer<baseEvent?> {
+        @Throws(JsonParseException::class)
+        override fun deserialize(
+            json: JsonElement,
+            typeOfT: Type,
+            context: JsonDeserializationContext
+        ): baseEvent? {
 
-        type?.forEach{
-            if (it != null) {
+            val rootJsonObject = json.asJsonObject
+            val eventJsonObject = rootJsonObject["event"].asJsonObject
+            val dataObject =  eventJsonObject["data"].asJsonObject
 
-                val itJsonObject =  it.asJsonObject
-
-                var itResult: result =
-                    result(
-                        entity_id = it.asJsonObject["entity_id"].asString,
-                        state = it.asJsonObject["state"].asString,
-                        last_changed = it.asJsonObject["last_changed"].asString,
-                        last_updated = it.asJsonObject["last_updated"].asString,
+            val jsonResult : baseEvent =
+                baseEvent(
+                    id = rootJsonObject["id"].asInt,
+                    type =  rootJsonObject["type"].asString,
+                    event = Event(
+                        event_type =  eventJsonObject["event_type"].asString,
+                        origin =  eventJsonObject["origin"].asString,
+                        time_fired = eventJsonObject["time_fired"].asString,
                         context = Gson().fromJson(
-                            itJsonObject["context"].asJsonObject,
-                            Context::class.java
+                            eventJsonObject["context"].asJsonObject,
+                            Context::class.java)
 
-                        ),
-                        participation = Participation(),
-                        viewState = ViewState(),
-                        resultObservers = arrayListOf()
-
+                        )
                     )
 
-                var attributes: Attributes? = null
-                val domain = itResult.entity_id.split(".")[0]
 
-                 when (domain){
-                    "sun" -> {
-                         attributes = fromJson<Attributes_sun>(itJsonObject)
-                        Log.d("jsonds", "sun")
-                    }
-                    //return context.deserialize(jsonObject,RectangleShape::class.java)
-                    "script" -> {
-                        attributes = fromJson<Attributes_script>(itJsonObject)
-                        Log.d("jsonds", "script")
-                    }
-                    //return context.deserialize(jsonObject,CircleShape::class.java)
-                    "light" -> {
-                        attributes = fromJson<Attributes_light>(itJsonObject)
-                        Log.d("jsonds", "light")
-                    }
-                }
-                itResult.attributes = attributes
-                jsonResult.result!!.add(itResult)
-            }}
 
-        return jsonResult
+            when(rootJsonObject["type"].asString){
+                 "onChange"  -> {
+                     jsonResult.event?.data = Data(
+                         entity_id = dataObject["entity_id"].asString,
+                         old_state = getResult(dataObject["old_state"].asJsonObject),
+                         new_state = getResult(dataObject["new_state"].asJsonObject))
+                     return jsonResult
+            }
+        }
+
+            return jsonResult
+        }
+    }
+
+    fun getResult(resultJson:JsonObject): result {
+
+        val entity_id= resultJson["entity_id"].asString
+        if(entity_id == null)
+        {
+            val t = entity_id
+        }
+        return result(
+            entity_id = entity_id,
+            state = resultJson["state"].asString,
+            last_changed = resultJson["last_changed"].asString,
+            last_updated = resultJson["last_updated"].asString,
+            context = Gson().fromJson(
+                resultJson["context"].asJsonObject,
+                Context::class.java),
+            attributes = getAttributesFormJson(entity_id.substringBefore("."),resultJson["attributes"].asJsonObject)
+        )
+    }
+
+    internal fun <T: IAttributes> getAttributesFormJson(domain: String, AttributeJsonObject: JsonObject ) :T{
+        when (domain){
+            "sun" -> {
+                Log.d("jsonds", "sun")
+                return fromJson<Attributes_sun>(AttributeJsonObject) as T }
+            "script" -> {
+                Log.d("jsonds", "script")
+                return fromJson<Attributes_script>(AttributeJsonObject) as T }
+            "light" -> {
+                Log.d("jsonds", "light")
+                return fromJson<Attributes_light>(AttributeJsonObject) as T }
+            else -> {
+                //val t = Gson().fromJson<Attributes>(AttributeJsonObject, Attributes::class.java)
+
+                return fromJson<Attributes>(AttributeJsonObject) as T }
+        }
     }
 
     inline fun <reified T> fromJson(jsonObject: JsonObject): T{
-        return Gson().fromJson(jsonObject["attributes"].asJsonObject, T::class.java)
-    }
-}
+        return Gson().fromJson(jsonObject, T::class.java) }
+
+
+

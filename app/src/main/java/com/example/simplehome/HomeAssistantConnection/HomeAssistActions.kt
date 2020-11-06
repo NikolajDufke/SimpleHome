@@ -17,74 +17,47 @@ class HomeAssistActions(){
         SocketManager.sendMessage(data)
     }
 
-    fun sendScript(script: String) {
-        Log("sending script", script)
+    fun sendScript(entiId: String) {
+        Log("sending script", entiId)
         val message =
             baseEntiCall(
                 id = SocketManager.messageId,
+                domain = "script",
                 service_data = service_data_base(
-                    script
+                    entiId
                 )
             )
         sendMessage(message)
     }
 
-    fun CallLightService(enti: result){
+    fun CallLightService(entity_id: String, brightness: Int){
         Log("Calling light service","")
 
-        val attr = enti.attributes as Attributes_light
-        var call = lightCall(
-            id = SocketManager.messageId,
-            service_data = service_data_light(
-                enti.entity_id,
-                brightness = attr.brightness
-            )
-        )
+        when (brightness){
+            0 -> {
+                val call = baseEntiCall(
+                    id = SocketManager.messageId,
+                    service = "turn_off",
+                    domain = "light",
+                    service_data = service_data_base(
+                        entity_id
+                ))
+                sendMessage(call)
 
-        if(attr.brightness == 0)
-        {
-            call.service = "turn_off"
         }
+            else -> {
+                val call = lightCall(
+                    id = SocketManager.messageId,
+                    service_data = service_data_light(
+                        entity_id,
+                        brightness = brightness
+                    ))
+                sendMessage(call)
 
-        sendMessage(call)
-    }
-
-
-/*
-    fun CallLightService(brightness: number, entityId: string){
-            if (brightness > 0) {
-                SendMessage(
-                    {
-                        "id": id,
-                        "type": "call_service",
-                        "domain": "light",
-                        "service": "turn_on",
-                        "service_data": {
-                        "entity_id": entityId,
-                        "brightness": brightness,
-                    }
-                    }
-                )
-            }
-            if (brightness == 0) {
-                console.log(" light off")
-                SendMessage(
-                    {
-                        "id": id,
-                        "type": "call_service",
-                        "domain": "light",
-                        "service": "turn_off",
-                        "service_data": {
-                        "entity_id": entityId,
-                    }
-                    }
-                )
             }
         }
-
-
     }
-*/
+
     fun Log(where: String, message: String) {
         android.util.Log.d(TAG, "sendMessage " + where + ": " + message)
     }

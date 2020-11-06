@@ -36,7 +36,7 @@ class baseCall(
 open class baseEntiCall(
     override val id: Int,
     override val type: String = "call_service",
-    override val domain: String = "script",
+    override val domain: String,
     override val service: String = "turn_on",
     @SerializedName("service_data") override val service_data: service_data_base
 ) : IbaseCall,

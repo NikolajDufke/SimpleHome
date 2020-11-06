@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -13,64 +13,29 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="1. sal"
-        app:layout_constraintTop_toTopOf="parent"></TextView>
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <LinearLayout
         android:id="@+id/mainhorozonlalButtoonLinarLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:layout_gravity="center_horizontal"
-        >
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView">
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/mainLightSlidersLinarLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_gravity="center_horizontal"
-        />
-
-
-        </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/mainLight1TextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="hello"></TextView>
-
-        <com.google.android.material.slider.Slider
-            android:id="@+id/mainLight1Slider"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:valueFrom="0.0"
-            android:valueTo="100.0"
-            style="@style/Widget.AppCompat.SeekBar.Discrete"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Button"
-            />
-
-        <TextView
-            android:id="@+id/mainLight2TextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="hello"></TextView>
-
-
-        <com.google.android.material.slider.Slider
-            android:id="@+id/mainLight2Slider"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:valueFrom="0"
-            android:valueTo="100"
-            style="@style/Widget.AppCompat.SeekBar.Discrete"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Button"
-            />
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mainhorozonlalButtoonLinarLayout"
+        >
     </LinearLayout>
-</LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

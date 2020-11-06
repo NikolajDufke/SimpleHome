@@ -1,12 +1,10 @@
 package com.example.simplehome.models
 
-import com.example.simplehome.interfaces.IObservable
-import com.example.simplehome.interfaces.IResultObserver
+import android.graphics.drawable.Drawable
+import com.example.simplehome.R
 import com.google.gson.annotations.SerializedName
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.coroutines.coroutineContext
-import kotlin.reflect.typeOf
+import com.example.simplehome.models.IbaseViewData as IbaseViewData1
 
 interface haBase {
     val type: String
@@ -26,7 +24,6 @@ interface EntityBase{
     val last_changed: Date;
     val last_updated: Date;
     val state: String;
-    val participation: Participation;
 }
 
 interface ISensorBatteryLevel : EntityBase {
@@ -39,7 +36,7 @@ interface ISensorBatteryLevel : EntityBase {
      var id : Int = -1,
      var type : String? = null,
      var success : Boolean = false,
-     @SerializedName("result") var result : MutableList<result>? = null
+     @SerializedName("result") var result : MutableList<result>? = mutableListOf()
  )
 
 
@@ -50,15 +47,38 @@ class Context (
 )
 
 data  class result (
+    val entity_id: String,
+    val state: String,
+    val last_changed: String,
+    val last_updated: String,
+    val context: Context? ,
+    val attributes : IAttributes
+    ) :  Comparable<result?> {
+
+    fun getDomain() :String {
+        return entity_id.substringBefore(".")
+    }
+
+    override fun compareTo(other: result?) = compareValuesBy(this, other,
+        {
+            val cState: Int = this.state.compareTo(other?.state!!)
+            val cAttribute: Int = this.attributes.compareTo(other?.attributes!!)
+            return cState.compareTo(cAttribute)
+        })
+    }
+
+
+/*
+data  class result (
     var entity_id: String,
     var state: String,
     var last_changed: String,
     var last_updated: String,
     var context: Context? = null,
-    var attributes : Attributes? = null,
-    var participation: Participation,
-    var viewState : ViewState,
-    override val resultObservers: ArrayList<IResultObserver>
+    var attributes : IAttributes? = null,
+    var participation: Participation = Participation(),
+    var viewState : ViewState = ViewState(),
+    override val resultObservers: ArrayList<IResultObserver> = arrayListOf()
 ) : IObservable, IResultObserver, Comparable<result?> {
 
     fun getEntiId(): String {
@@ -70,28 +90,61 @@ data  class result (
     }
 
     override fun update(enti: result) {
-
+        when (getDomain()){
+            "light" -> {
+                (attributes as Attributes_light).brightness = (enti.attributes as Attributes_light).brightness
+            }
+        }
     }
 
     override fun compareTo(other: result?) = compareValuesBy(this, other,
-        { it?.state }
+        { it?.state
+        }
     )
 
-}
+    fun <T: IbaseViewData> getViewDataModel(): T{
 
-class Participation{
-    var slides:Boolean = false
-    var music:Boolean = false
+        var base = baseViewData(
+            entity_id = this.entity_id,
+            state = this.state,
+            isLoaded = this.viewState.isLoaded,
+            viewId = this.viewState.viewId
+        )
+
+        when(getDomain()) {
+            "light" -> {
+                val lightModel : lightViewData = base as lightViewData
+                lightModel.brightness = (this.attributes as Attributes_light).brightnessInProcent
+                return lightModel as T
+                }
+            }
+        return base as T
+        }
+}*/
+
+
+enum class participation{
+    SCRIPTBUTTONS,
+    LIGHTSLIDERS,
+    MUSIC
 }
 
 class ViewState{
     var isLoaded : Boolean = false
-    var viewId : String? = null
+    var viewId : Int? = null
 }
 
 
-interface Attributes : Comparable<Any>{
+
+interface IAttributes : Comparable<Any>{
     val friendly_name: String
+}
+
+
+class Attributes (override val friendly_name: String):IAttributes {
+    override fun compareTo(other: Any): Int {
+        return -1
+    }
 }
 
 class Attributes_sun (
@@ -105,17 +158,19 @@ class Attributes_sun (
     @SerializedName("azimuth") var azimuth : Double,
     @SerializedName("rising") var rising : Boolean,
     override val friendly_name: String
-): Attributes{
+): IAttributes{
    override fun compareTo(other: kotlin.Any): kotlin.Int {
-        TODO("Not yet implemented")
+        return -1
     }
-}
 
+
+}
 
 class Attributes_script(
     var last_triggered: String,
+    val icon: String,
     override val friendly_name: String
-): Attributes {
+): IAttributes {
     override fun compareTo(other: Any): Int {
         if(other is Attributes_script){
             when {
@@ -125,8 +180,6 @@ class Attributes_script(
         return -1
     }
 }
-
-
 
 class Attributes_light(
     var brightness: Int,
@@ -139,7 +192,14 @@ class Attributes_light(
     var supported_features: Int,
     var xy_color: List<Int>,
     override var friendly_name: String
-    ): Attributes{
+    ): IAttributes{
+        var brightnessInProcent: Float = 0.0f
+            get() = (100f/255f) * brightness.toFloat()
+    var setbrightnessFromProcent: Float = 0.0f
+        set(value) {
+           val newBrightness = (255f/100f) * value
+           this.brightness = newBrightness.toInt()
+        }
         override fun compareTo(other: Any): Int {
             if(other is Attributes_light){
                 when {
@@ -149,7 +209,49 @@ class Attributes_light(
             }
             return -1
         }
+
+   /* override fun <T : IAttributes> updateObject(Object: T) {
+        if(Object is Attributes_light){
+            brightness = Object.brightness
+        }*/
+}
+
+class EntityContainer(
+    val enti: result,
+    val participation: MutableList<participation> = mutableListOf(),
+    val viewState: ViewState = ViewState(),
+    var icon : Int = R.drawable.script
+    ){
+    fun <T: IbaseViewData1> getViewDataModel(): T{
+
+        var base = baseViewData(
+            entity_id = enti.entity_id,
+            state = enti.state,
+            isLoaded = viewState.isLoaded,
+            viewId = viewState.viewId,
+            friendly_name = enti.attributes.friendly_name
+        )
+
+        when(enti.getDomain()) {
+            "light" -> {
+                val lightModel : lightViewData = lightViewData(base, (enti.attributes as Attributes_light).brightnessInProcent)
+                return lightModel as T
+            }
+            "script" -> {
+
+                val scriptModel : scriptViewData = scriptViewData(base, icon)
+                return scriptModel as T
+            }
+        }
+        return base as T
     }
+
+
+}
+
+
+
+
 
 
 
