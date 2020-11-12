@@ -68,59 +68,7 @@ data  class result (
     }
 
 
-/*
-data  class result (
-    var entity_id: String,
-    var state: String,
-    var last_changed: String,
-    var last_updated: String,
-    var context: Context? = null,
-    var attributes : IAttributes? = null,
-    var participation: Participation = Participation(),
-    var viewState : ViewState = ViewState(),
-    override val resultObservers: ArrayList<IResultObserver> = arrayListOf()
-) : IObservable, IResultObserver, Comparable<result?> {
 
-    fun getEntiId(): String {
-        return entity_id.substringAfter(".")
-    }
-
-    fun getDomain() :String {
-        return entity_id.substringBefore(".")
-    }
-
-    override fun update(enti: result) {
-        when (getDomain()){
-            "light" -> {
-                (attributes as Attributes_light).brightness = (enti.attributes as Attributes_light).brightness
-            }
-        }
-    }
-
-    override fun compareTo(other: result?) = compareValuesBy(this, other,
-        { it?.state
-        }
-    )
-
-    fun <T: IbaseViewData> getViewDataModel(): T{
-
-        var base = baseViewData(
-            entity_id = this.entity_id,
-            state = this.state,
-            isLoaded = this.viewState.isLoaded,
-            viewId = this.viewState.viewId
-        )
-
-        when(getDomain()) {
-            "light" -> {
-                val lightModel : lightViewData = base as lightViewData
-                lightModel.brightness = (this.attributes as Attributes_light).brightnessInProcent
-                return lightModel as T
-                }
-            }
-        return base as T
-        }
-}*/
 
 
 enum class participation{
@@ -134,12 +82,9 @@ class ViewState{
     var viewId : Int? = null
 }
 
-
-
 interface IAttributes : Comparable<Any>{
     val friendly_name: String
 }
-
 
 class Attributes (override val friendly_name: String):IAttributes {
     override fun compareTo(other: Any): Int {
@@ -159,7 +104,7 @@ class Attributes_sun (
     @SerializedName("rising") var rising : Boolean,
     override val friendly_name: String
 ): IAttributes{
-   override fun compareTo(other: kotlin.Any): kotlin.Int {
+   override fun compareTo(other: Any): kotlin.Int {
         return -1
     }
 
@@ -216,14 +161,52 @@ class Attributes_light(
         }*/
 }
 
+class Attributes_music(
+    val source_list: Array<String>,
+    val volume_level: Float,
+    val is_volume_muted: Boolean,
+    val media_content_id: String,
+    val media_content_type: String,
+    val media_duration: Int,
+    val media_position: Int,
+    val media_position_updated_at: Date,
+    val media_title: String,
+    val media_artist: String,
+    val media_album_name: String,
+    val shuffle: Boolean,
+    val sonos_group: Array<String>,
+    override val friendly_name:String,
+    val entity_picture: String,
+    val supported_features: Int
+): IAttributes{
+    override fun compareTo(other: Any): kotlin.Int {
+        return -1
+    }
+}
+
+
+interface EntityInfo{
+
+}
+
+class musicInfo(
+    var isPlaying: Boolean = false
+): EntityInfo
+
+class scriptInfo(
+    var icon : Int = R.drawable.script
+): EntityInfo
+
+
+
+
 class EntityContainer(
-    val enti: result,
+    var enti: result,
     val participation: MutableList<participation> = mutableListOf(),
     val viewState: ViewState = ViewState(),
-    var icon : Int = R.drawable.script
+    var entityInfo : EntityInfo? = null
     ){
     fun <T: IbaseViewData1> getViewDataModel(): T{
-
         var base = baseViewData(
             entity_id = enti.entity_id,
             state = enti.state,
@@ -231,22 +214,32 @@ class EntityContainer(
             viewId = viewState.viewId,
             friendly_name = enti.attributes.friendly_name
         )
-
         when(enti.getDomain()) {
             "light" -> {
                 val lightModel : lightViewData = lightViewData(base, (enti.attributes as Attributes_light).brightnessInProcent)
+
                 return lightModel as T
             }
             "script" -> {
-
-                val scriptModel : scriptViewData = scriptViewData(base, icon)
+                if(entityInfo is scriptInfo){
+                val scriptModel : scriptViewData = scriptViewData(base, (entityInfo as scriptInfo).icon )
                 return scriptModel as T
+            }
+            }
+            "media_player" -> {
+
+                val ma = enti.attributes as Attributes_music
+                val musicModel : musicViewData = musicViewData(
+                    base,
+                    volume =  ma.volume_level,
+                    picture = "http://192.168.178.2:8123" + ma.entity_picture
+                )
+                return musicModel as T
+
             }
         }
         return base as T
     }
-
-
 }
 
 

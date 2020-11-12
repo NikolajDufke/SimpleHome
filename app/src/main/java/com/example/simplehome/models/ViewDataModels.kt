@@ -49,7 +49,6 @@ class lightViewData(
     var brightness: Float,
     override val friendly_name: String
 ): IbaseViewData {
-
     constructor(baseViewData: baseViewData, brightness: Float) : this(
         entity_id = baseViewData.entity_id,
         state = baseViewData.state,
@@ -58,10 +57,25 @@ class lightViewData(
         isLoaded = baseViewData.isLoaded,
         brightness = brightness
 
-    ) {
-
-    }
+    )
 }
-
+class musicViewData(
+    override val entity_id: String,
+    override val friendly_name: String,
+    override val state: String,
+    override val isLoaded: Boolean,
+    override val viewId: Int?,
+    val Volume : Float,
+    val Picture : String
+):IbaseViewData {
+    constructor(baseViewData: baseViewData, volume: Float, picture: String) : this(
+        entity_id = baseViewData.entity_id,
+        state = baseViewData.state,
+        friendly_name = baseViewData.friendly_name,
+        viewId = baseViewData.viewId,
+        isLoaded = baseViewData.isLoaded,
+        Volume = volume,
+        Picture = picture
+    )}
 
 

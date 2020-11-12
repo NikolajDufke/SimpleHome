@@ -1,9 +1,9 @@
 package com.example.simplehome.HomeAssistantConnection
 
 import com.example.simplehome.models.*
+import javax.net.ssl.SSLEngineResult
 
 class HomeAssistActions(){
-
 
     val TAG = "HomeAssistActions"
 
@@ -56,6 +56,47 @@ class HomeAssistActions(){
 
             }
         }
+    }
+
+    fun callMusicAction(entiId: String, action: MusicAction){
+        Log("Calling music service", action.toString())
+
+        var service : String = ""
+
+        when (action){
+            MusicAction.PreviousTrack -> service = "media_previous_track"
+            MusicAction.NextTrack -> service = "media_next_track"
+            MusicAction.Pause -> service = "media_pause"
+            MusicAction.Play -> service = "media_play"
+        }
+
+        val call = baseEntiCall(
+            id = SocketManager.messageId,
+            domain = "media_player",
+            service = service,
+            service_data = service_data_base(entiId)
+        )
+        sendMessage(call)
+
+    }
+
+    enum class MusicAction {
+        Play,
+        Pause,
+        PreviousTrack,
+        NextTrack
+    }
+
+
+
+    fun CallMusicVolume(entiId: String, volume: Float){
+        Log("Calling volume service","")
+
+        val call = musicVolumeCall(
+            id = SocketManager.messageId,
+            service_data = service_data_music_volume(entiId, volume)
+            )
+        sendMessage(call)
     }
 
     fun Log(where: String, message: String) {

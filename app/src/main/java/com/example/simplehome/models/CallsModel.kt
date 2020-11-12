@@ -28,6 +28,11 @@ class service_data_light(
 
 ): service_data_base(entity_id)
 
+class service_data_music_volume(
+    entity_id: String,
+    val volume_level : Float
+):service_data_base(entity_id)
+
 class baseCall(
     override val id: Int,
     override val type: String
@@ -35,18 +40,27 @@ class baseCall(
 
 open class baseEntiCall(
     override val id: Int,
-    override val type: String = "call_service",
     override val domain: String,
-    override val service: String = "turn_on",
-    @SerializedName("service_data") override val service_data: service_data_base
+    override val service_data: service_data_base,
+    override val type: String = "call_service",
+    override val service: String = "turn_on"
+
 ) : IbaseCall,
     IbaseSendMessage
 
 
 class lightCall(
     override val id: Int,
+    override val service_data: service_data_light,
     override val type: String = "call_service",
     override val domain: String = "light",
-    override var service: String = "turn_on",
-    @SerializedName("service_data") override val service_data: service_data_light
+    override var service: String = "turn_on"
+): IbaseSendMessage
+
+class musicVolumeCall(
+    override val id: Int,
+    override val service_data: service_data_music_volume,
+    override val type: String = "call_service",
+    override val service: String = "volume_set",
+    override val domain: String = "media_player"
 ): IbaseSendMessage

@@ -1,4 +1,4 @@
-package com.example.simplehome
+package com.example.simplehome.ViewModels
 
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.simplehome.HomeAssistantConnection.HomeAssistActions
 import com.example.simplehome.Repository.Entities
-import com.example.simplehome.Repository.Entities.Companion.buttonEvents
+import com.example.simplehome.Repository.Entities.buttonEvents
 import com.example.simplehome.models.baseViewData
 import com.example.simplehome.models.lightViewData
 import com.example.simplehome.models.scriptViewData

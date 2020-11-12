@@ -112,20 +112,18 @@ class SocketManager(baseUri: Any?) {
                     .registerTypeAdapter(baseResponse::class.java, ResponseDeserializer())
                     .create()
 
-                val res = gsonFromResponse.fromJson(message,
+                val res = GsonFactory.GetGsonResponse().fromJson(message,
                     baseResponse::class.java )
 
                 Entities.onEntityGetAll(res.result)
             }
             "event" -> {
                 Log("event", message)
-                val gsonFromEvent = GsonBuilder()
-                    .registerTypeAdapter(baseEvent::class.java, EventDeserializer())
-                    .create()
 
-                val event = gsonFromEvent.fromJson(message, baseEvent::class.java)
+                val event = GsonFactory.GetGsonEvent().fromJson(message, baseEvent::class.java)
 
-                event.event?.data?.new_state?.let { Entities.onEntityUpdate(it) }
+                Entities.onEntityUpdate(event)
+
             }
         }
     }

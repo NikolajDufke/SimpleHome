@@ -13,7 +13,6 @@ class JsonAdaptor(){
    fun <T> toJson(obj: T): String{
         val clazz  = obj
         val jsonString: String = Gson().toJson(clazz)
-
         return jsonString
     }
 }
@@ -85,18 +84,43 @@ internal class ResponseDeserializer : JsonDeserializer<baseResponse?> {
                     )
 
 
-
-            when(rootJsonObject["type"].asString){
-                 "onChange"  -> {
-                     jsonResult.event?.data = Data(
+            when(eventJsonObject["event_type"].asString){
+                 "state_changed"  -> {
+                     jsonResult.event?.data = Data_onChange(
                          entity_id = dataObject["entity_id"].asString,
                          old_state = getResult(dataObject["old_state"].asJsonObject),
                          new_state = getResult(dataObject["new_state"].asJsonObject))
-                     return jsonResult
+                }
+                "call_service" -> {
+
+                val domain = dataObject["domain"].asString
+
+                jsonResult.event?.data = Data_event(
+                    domain = domain,
+                    service = dataObject["service"].asString,
+                    service_data = getService_dataFromJson(
+                        domain = domain,
+                        AttributeJsonObject = dataObject["service_data"].asJsonObject
+                        )
+                    )
+                }
             }
-        }
 
             return jsonResult
+        }
+    }
+
+    internal fun <T: IbaseSendMessage>  getService_dataFromJson(domain: String, AttributeJsonObject: JsonObject ) : T{
+        when (domain){
+            "light" -> {
+                Log.d("jsonds", "light")
+                return fromJson<service_data_light>(AttributeJsonObject) as T }
+            "media_player" -> {
+                Log.d("jsonds", "media_player")
+                return fromJson<service_data_music_volume>(AttributeJsonObject) as T }
+            else -> {
+                //val t = Gson().fromJson<Attributes>(AttributeJsonObject, Attributes::class.java)
+                return fromJson<baseEntiCall>(AttributeJsonObject) as T }
         }
     }
 
@@ -130,9 +154,11 @@ internal class ResponseDeserializer : JsonDeserializer<baseResponse?> {
             "light" -> {
                 Log.d("jsonds", "light")
                 return fromJson<Attributes_light>(AttributeJsonObject) as T }
+            "media_player" -> {
+                Log.d("jsonds", "media_player")
+                return fromJson<Attributes_music>(AttributeJsonObject) as T }
             else -> {
                 //val t = Gson().fromJson<Attributes>(AttributeJsonObject, Attributes::class.java)
-
                 return fromJson<Attributes>(AttributeJsonObject) as T }
         }
     }
